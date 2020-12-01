@@ -1,0 +1,83 @@
+/*==========  Style Sheet - Vars  ==========*/
+
+// base font
+$bf:                'Nunito', sans-serif;
+$colorPrimary: #5a6268;
+$borderRadius: 5px;
+$borderColor: #dfe4ec;
+
+.pagination {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 45px;
+
+    .pagination-overview {
+        display: flex;
+        flex-direction: row;
+        font: 500 14px/30px $bf;
+        color: #2f2e43;
+        align-items: center;
+        align-content: center;
+
+        .pagination-overview-per_page {
+            padding: 0 10px 0 0;
+
+            .form-control {
+                line-height: 20px;
+                padding: 5px 10px;
+                width: 50px;
+                min-width: 60px;
+            }
+        }
+    }
+    
+    .pagination-list {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .pagination-item {
+        display: flex;
+        font: 500 13px/30px $bf;
+        color: #2f2e43;
+        border: 1px solid $borderColor;
+        border-radius: $borderRadius;
+        margin-right: 5px;
+        padding: 0 7.5px;
+        cursor: pointer;
+        background: #fff;
+        transition: color .4s, background-color .4s, border-color .4s;
+        min-width: 30px;
+        justify-content: center;
+
+        .mdi {
+            font-size: 18px;
+        }
+
+        &:hover {
+            background-color: $colorPrimary;
+            border-color: $colorPrimary;
+            color: #fff;
+        }
+        
+        &.active, &:active, &:active, &[active] {
+            background-color: $colorPrimary;
+            border-color: $colorPrimary;
+            color: #fff;
+        }
+
+        &.disabled, &:disabled, &[disabled] {
+            pointer-events: none;
+            opacity: .75;
+            background-color: #f7fafc;
+            color: #9fa4b3;
+        }
+        
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+}
