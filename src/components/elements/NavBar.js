@@ -6,6 +6,8 @@ import SearchPanel from './SearchPanel';
 
 import { store } from '../../contexts/AuthContext';
 import AuthService from '../../services/AuthService';
+import { LOCALES } from '../../env';
+import { LocaleContext } from '../../contexts/LocaleContext';
 
 const NavBar = ({ callback }) => {
     const history = useHistory();
@@ -13,6 +15,8 @@ const NavBar = ({ callback }) => {
     const [auth] = useState(authContext.isSignedIn());
     const [user, setUser] = useState(undefined);
     const [error, setError] = useState(false);
+    const locales = LOCALES.split(',')
+    const currentLocale = useContext(LocaleContext);
 
     useEffect(() => {
         if (authContext.isSignedIn() && !user) {
@@ -50,6 +54,22 @@ const NavBar = ({ callback }) => {
                     className="navbar collapse navbar-collapse justify-content-end"
                     id="navbarsExample02">
                     <ul className="navbar-nav">
+                        <div className="dropdown mr-3">
+                            <button
+                                className="btn btn-secondary dropdown-toggle"
+                                role="button"
+                                id="dropdownMenuLink"
+                                data-toggle="dropdown"
+                                aria-haspopup="true"
+                                aria-expanded="false">
+                                {currentLocale.get()}
+                            </button>
+                            <div className="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                {(locales || []).map((locale) => (
+                                    <button key={locale} className="dropdown-item" onClick={() => currentLocale.set(locale)}>{locale}</button>
+                                ))}
+                            </div>
+                        </div>
                         {user && (
                             <li className="nav-item active">
                                 <Link className="nav-link" to={`/users/${user.id}/notes`}>

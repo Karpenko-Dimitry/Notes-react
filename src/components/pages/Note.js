@@ -9,7 +9,6 @@ import NotesService from '../../services/NotesService';
 
 import Header from '../elements/Header';
 import Spiner from '../elements/Spiner';
-import SideBar from '../elements/SideBar';
 import Error from '../elements/Error';
 
 const Note = () => {
@@ -48,7 +47,7 @@ const Note = () => {
                     {error && <Error message={error || undefined} />}
                     {load && <Spiner />}
                     {note && (
-                        <div className="col-md-8 blog-main">
+                        <div className="col-md-12 blog-main">
                             <div className="blog-post">
                                 <h2 className="blog-post-title">{note.title}</h2>
                                 <p className="blog-post-meta">
@@ -101,7 +100,6 @@ const Note = () => {
                             </div>
                         </div>
                     )}
-                    <SideBar />
                 </div>
             </main>
         </>

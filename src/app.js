@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 
 //Custom plugins and services
 import { AuthProvider, store } from './contexts/AuthContext';
+import { LocaleProvider, LocaleContext } from './contexts/LocaleContext';
 import './components/css/global.css';
 
 //Custom components
@@ -24,10 +25,15 @@ import Create from './components/pages/Create';
 const Dom = () => {
     // restore current user
     const authMemo = useContext(store);
+    const currentLocale = useContext(LocaleContext);
 
     useEffect(() => {
         authMemo.restoreToken();
     }, [authMemo]);
+
+    useEffect(() => {
+        currentLocale.restore();
+    }, [currentLocale]);
 
     return (
         <Router>
@@ -77,7 +83,9 @@ const Dom = () => {
 const App = () => {
     return (
         <AuthProvider>
-            <Dom />
+            <LocaleProvider>
+                <Dom />
+            </LocaleProvider>            
         </AuthProvider>
     );
 };

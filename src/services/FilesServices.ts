@@ -1,40 +1,30 @@
 // import { da } from 'date-fns/locale';
 import ApiRequestService from './ApiRequestService';
-import { FALLBACK_LOCALE } from '../env';
 
-class NoteService {
+class FilesServices {
     /**
      * Fetch list of notifications
      *
      * @param email
      * @param password
      */
-    public static async list(user_id: number|null, data: object = {}, headers: object = {'locale': FALLBACK_LOCALE}) {
+    public static async list(user_id: number|null, data: object = {}) {
         if (!user_id) {
-            return ApiRequestService.get(`/notes`, data, headers);
+            return ApiRequestService.get(`/notes`, data);
         }
 
-        return ApiRequestService.get(`/users/${user_id}/notes`, data, headers);
+        return ApiRequestService.get(`/users/${user_id}/notes`, data);
     }
 
-    // /**
-    //  * Store notification by id
-    //  *
-    //  * @param data
-    //  */
-    // public static async store(data: any) {
-    //     return ApiRequestService.post(`/notes`, data, {
-    //         'Content-Type': undefined,
-    //     });
-    // }
-
-     /**
+    /**
      * Store notification by id
      *
      * @param data
      */
     public static async store(data: any) {
-        return ApiRequestService.post(`/notes`, data);
+        return ApiRequestService.post(`/files`, data, {
+            'Content-Type': undefined,
+        });
     }
 
     /**
@@ -60,8 +50,8 @@ class NoteService {
      *
      * @param data
      */
-    public static async delete(uid: string) {
-        return ApiRequestService._delete(`/notes/${uid}`);
+    public static async delete(id: number) {
+        return ApiRequestService._delete(`/files/${id}`);
     }
     
     /**
@@ -75,4 +65,4 @@ class NoteService {
     }
 }
 
-export default NoteService;
+export default FilesServices;

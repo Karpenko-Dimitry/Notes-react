@@ -8,6 +8,7 @@ import LanguagesService from '../../services/LanguagesService';
 import Header from '../elements/Header';
 import Spiner from '../elements/Spiner';
 import NoteService from '../../services/NotesService';
+import FilesServices from '../../services/FilesServices';
 
 const Create = () => {
     const history = useHistory();
@@ -22,8 +23,16 @@ const Create = () => {
     }, {});
 
     const [selectedCategories, setSelectedCategories] = useReducer((prev, _new) => {
-        return [...prev, ..._new];
-    }, '');
+        let result = { ...prev, ..._new };
+
+        for (let id in result) {
+            if (!result[id]) {
+                delete result[id];
+            }
+        }
+
+        return result;
+    }, []);
 
     const [card, setCard] = useState('en');
     const [categories, setCategories] = useState([]);
@@ -32,7 +41,9 @@ const Create = () => {
     const [errors, setErrors] = useState({});
     const [load, setLoad] = useState(true);
     const [_public, setPublic] = useState(true);
-    const [files, setFiles] = useState([]);
+    const [upLoadedFiles, setUpLoadedFiles] = useReducer((prev, _new) => {
+        return { ...prev, ..._new };
+    }, []);
 
     useEffect(() => {
         CategoriesService.list().then(
@@ -44,7 +55,10 @@ const Create = () => {
             (res) => setErrors(res.data.message),
         );
         LanguagesService.list().then(
-            (res) => setLanguages(res.data.data),
+            (res) => {
+                setLanguages(res.data.data);
+                settranslations({ en: {}, ru: {} });
+            },
             (res) => setErrors(res.data.errors),
         );
         setLoad(false);
@@ -53,22 +67,52 @@ const Create = () => {
     const doCreate = () => {
         setErrors({});
 
-        let formData = new FormData();
+        NoteService.store({
+            public: _public,
+            translations,
+            category: Object.keys(selectedCategories),
+            files: Object.keys(upLoadedFiles),
+        }).then(
+            (res) => {
+                console.log(res);
+                history.push('/notes/' + res.data.data.uid);
+            },
+            (res) => {
+                console.log(res);
+                setErrors(res.data.errors);
+            },
+        );
+    };
 
-        formData.append('public', _public ? 1 : 0);
-        formData.append('translations', JSON.stringify(translations));
-
+    const doUpLoad = (files) => {
         for (let i = 0; i < files.length; i++) {
-            formData.append('user_file[]', files[i], files[i]['name']);
-        }
+            let formData = new FormData();
 
-        for (let i = 0; i < selectedCategories.length; i++) {
-            formData.append('category[]', selectedCategories[i]);
-        }
+            formData.append('user_file', files[i], files[i]['name']);
 
-        NoteService.store(formData).then(
-            (res) => history.push('/notes/' + res.data.data.uid),
-            (res) => setErrors(res.data.errors),
+            FilesServices.store(formData).then(
+                (res) => {
+                    setUpLoadedFiles({
+                        [res.data.data.id]: { name: files[i]['name'], ...res.data.data },
+                    });
+                },
+                (res) => {
+                    setErrors(res.data.errors);
+                },
+            );
+        }
+    };
+
+    const doDeleteUploaded = (id) => {
+        FilesServices.delete(id).then(
+            (res) => {
+                setUpLoadedFiles({
+                    [id]: {},
+                });
+            },
+            (res) => {
+                setErrors(res.data.errors);
+            },
         );
     };
 
@@ -145,17 +189,25 @@ const Create = () => {
                                                 />
                                             </div>
 
-                                            {(errors[language.type + '_title'] || []).map(
-                                                (error) => {
-                                                    return (
-                                                        <p
-                                                            key={`${error}-title-error`}
-                                                            className="text-danger">
-                                                            {error}
-                                                        </p>
-                                                    );
-                                                },
-                                            )}
+                                            {(
+                                                (errors &&
+                                                    errors[
+                                                        `translations.${language['type']}.title`
+                                                    ]) ||
+                                                []
+                                            ).map((error) => {
+                                                return (
+                                                    <p
+                                                        key={`${error}-title-error`}
+                                                        className="text-danger">
+                                                        {
+                                                            errors[
+                                                                `translations.${language['type']}.title`
+                                                            ]
+                                                        }
+                                                    </p>
+                                                );
+                                            })}
 
                                             <div className="input-group mt-3">
                                                 <div className="input-group-prepend">
@@ -184,17 +236,22 @@ const Create = () => {
                                                 />
                                             </div>
 
-                                            {(errors[language.type + '_content'] || []).map(
-                                                (error) => {
-                                                    return (
-                                                        <p
-                                                            key={`${error}-text-error`}
-                                                            className="text-danger">
-                                                            {error}
-                                                        </p>
-                                                    );
-                                                },
-                                            )}
+                                            {(
+                                                (errors &&
+                                                    errors[
+                                                        `translations.${language['type']}.content`
+                                                    ]) ||
+                                                []
+                                            ).map((error) => {
+                                                return (
+                                                    <p
+                                                        key={`${error}-text-error`}
+                                                        className="text-danger">
+                                                        {error}
+                                                        {error['translations.en.content']}
+                                                    </p>
+                                                );
+                                            })}
                                         </div>
                                     );
                                 })}
@@ -208,12 +265,13 @@ const Create = () => {
                                                 className="mr-1"
                                                 type="checkbox"
                                                 id={`category${category.id}`}
-                                                name="category[]"
-                                                onClick={(e) =>
-                                                    setSelectedCategories(e.target.value)
-                                                }
+                                                name="category"
+                                                onClick={(e) => {
+                                                    setSelectedCategories({
+                                                        [category.id]: e.target.checked,
+                                                    });
+                                                }}
                                                 value={category.id}
-                                                // {category.id}
                                             />
                                             <label
                                                 className="mb-0"
@@ -225,7 +283,7 @@ const Create = () => {
                                 })}
                             </div>
 
-                            {(errors.category || []).map((error) => {
+                            {((errors && errors.category) || []).map((error) => {
                                 return (
                                     <p key={`${error}-category-error`} className="text-danger">
                                         {error}
@@ -242,13 +300,20 @@ const Create = () => {
                                     className="hidden"
                                     id="userFile"
                                     name="user_file[]"
-                                    onChange={(e) => setFiles(e.target.files)}
+                                    onChange={(e) => {
+                                        doUpLoad(e.target.files);
+                                    }}
                                     multiple
                                 />
                                 <ul>
-                                    {files[0] &&
-                                        Array.from(files).map((file) => (
-                                            <li key={file.name}>{file.name}</li>
+                                    {Object.values(upLoadedFiles)[0] &&
+                                        Object.values(upLoadedFiles).map((file, id) => (
+                                            <li key={id} className={file.name ? '' : 'hidden'}>
+                                                <i
+                                                    className="fas fa-times mr-3"
+                                                    onClick={() => doDeleteUploaded(file.id)}></i>
+                                                {file.name}
+                                            </li>
                                         ))}
                                 </ul>
                             </div>
@@ -267,14 +332,18 @@ const Create = () => {
                                     Make public
                                 </label>
                             </div>
-
-                            {/* <div className="form-group form-check mt-3 text-left">
-                                <label htmlFor="tags" className="form-check-label">Hash Tag</label>
-                                <select className="form-check-input chosen-select" id=>
-                                    <option value="">test</option>
-                                </select>
-                                {!! Form::select('tags', $tags, null, ['className' => 'form-check-input chosen-select', 'id' => 'hashtag']) !!}
-                            </div> */}
+                            <div className="form-group form-check mt-3 text-left">
+                                <label htmlFor="hashtag" className="form-check-label">
+                                    Hash Tag
+                                </label>
+                                <div>
+                                    <select id="hashtag" name="tags">
+                                        {(tags || []).map((tag) => (
+                                            <option key={tag.id} value={tag.id}>{tag.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
 
                             <div className="d-flex justify-content-center mt-3">
                                 <input
@@ -284,66 +353,6 @@ const Create = () => {
                                 />
                             </div>
                         </form>
-                        {/* {!! Form::open(['url' => url_locale('/notes'), 'method' => 'post', 'files' => true]) !!}
-                            @foreach($languages as $language)
-                                <div className="language-body" id="{{$language->type}}_body">
-                                    <h2>{{__('title.add_note')}}</h2>
-                                    <div className="input-group mt-3">
-                                        <div className="input-group-prepend">
-                                            <span className="input-group-text" id="basic-addon1">
-                                                {{__('common.title')}}
-                                                {{__('common.' . $language->type)}}
-                                            </span>
-                                        </div>
-                                        {!! Form::text($language->type . '_title', null, ['className' => 'form-control']) !!}
-                                    </div>
-                                    <p className="text-danger">
-                                        {{$errors->first($language->type . '_title') ? $errors->first($language->type . '_title') : ''}}
-                                    </p>
-                                    <div className="input-group mt-3">
-                                        <div className="input-group-prepend">
-                                            <span className="input-group-text">
-                                                {{__('common.text')}}
-                                                {{__('common.' . $language->type)}}
-                                            </span>
-                                        </div>
-                                        {!! Form::textarea($language->type . '_content', null, ['className' => 'form-control']) !!}
-                                    </div>
-                                    <p className="text-danger">
-                                        {{$errors->first($language->type . '_content') ? $errors->first($language->type . '_content') : ''}}
-                                    </p>
-                                </div>
-                            @endforeach
-                            <div className="d-flex flex-wrap">
-                                    <p className="font-italic mr-3 mb-0">{{__('common.choose_cat')}}</p>
-                                @foreach ($categoriesList as $category)
-                                    <div className="mr-3">
-                                        {!! Form::checkbox('category[]', $category->id, false, ['id' => "category $category->id"]) !!}
-                                        {!! Form::label("category $category->id", $category->name, ['className' => 'mb-0']) !!}
-                                    </div>
-                                @endforeach
-                            </div>
-                            <p className="text-danger">
-                                {{$errors->first('category') ? $errors->first('category') : ''}}
-                            </p>
-                            <div className="form-group mt-3 text-left">
-                                {!! Form::label('userFile', __('common.upload'), ['className' => 'btn btn-secondary btn-sm']) !!}
-                                {!! Form::file('user_file[]', ['id' => 'userFile', 'hidden', 'className' => 'form-control-file']) !!}
-                                <ul className="files-list">
-                                </ul>
-                            </div>
-                            <div className="form-group form-check mt-3 text-left">
-                                {!! Form::checkbox('public', '1', true, ['className' => 'form-check-input', 'id' => 'exampleCheck1']) !!}
-                                {!! Form::label('exampleCheck1', __('common.m_public'), ['className' => 'form-check-label']) !!}
-                            </div>
-                            <div className="form-group form-check mt-3 text-left">
-                                {!! Form::label('tags', 'Hash Tag', ['className' => 'form-check-label']) !!}
-                                {!! Form::select('tags', $tags, null, ['className' => 'form-check-input chosen-select', 'id' => 'hashtag']) !!}
-                            </div>
-                            <div className="d-flex justify-content-center mt-3">
-                                {!! Form::submit(__('common.add_note'), ['className' => 'btn btn-secondary btn-lg']) !!}
-                            </div>
-                        {!! Form::close() !!} */}
                     </div>
                 </div>
             </main>

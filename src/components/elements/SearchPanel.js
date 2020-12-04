@@ -1,12 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 
-import { SearchContext } from '../pages/Home';
+import { FilterContext } from './NoteList';
 
 let timeout;
 
 const SearchPanel = () => {
-    const callback = useContext(SearchContext);
+    const { searchNotes } = useContext(FilterContext) || false;
     const history = useHistory();
     const [state, setState] = useState('');
 
@@ -15,11 +15,11 @@ const SearchPanel = () => {
 
         setState(value);
 
-        if (callback) {
+        if (searchNotes) {
             clearTimeout(timeout);
 
             timeout = setTimeout(() => {
-                callback(value);
+                searchNotes(value);
             }, 300);
         } else {
             timeout = setTimeout(() => {

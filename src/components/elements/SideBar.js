@@ -4,6 +4,7 @@ import { store } from '../../contexts/AuthContext';
 
 import FormUserLogin from './FormUserLogin';
 import FormNoteCreate from './FormNoteCreate';
+import RangeByCategory from './RangeByCategory';
 
 const SideBar = () => {
     const authContext = useContext(store);
@@ -13,6 +14,7 @@ const SideBar = () => {
         <aside className="col-lg-4 blog-sidebar">
             {auth && <FormNoteCreate />}
             {!auth && <FormUserLogin />}
+            <RangeByCategory />
         </aside>
     );
 };

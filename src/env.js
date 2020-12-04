@@ -12,3 +12,6 @@ export const GOOGLE_CLIENT_ID =
 export const GOOGLE_SECRET_ID = 'jdjXlQ_jbx7wNWE7F7OgJ14G';
 export const GOOGLE_REDIRECT_URI = 'http://localhost:3000/callback';
 export const GOOGLE_TOKEN_REQUEST_URI = 'https://oauth2.googleapis.com/token?';
+
+export const LOCALES = 'en,ru';
+export const FALLBACK_LOCALE = 'en';

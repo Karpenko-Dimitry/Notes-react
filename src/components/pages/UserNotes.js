@@ -1,36 +1,28 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useEffect, createContext, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 
-import Header from '../elements/Header';
-import NotesList from '../elements/NotesList';
-import Spiner from '../elements/Spiner';
-import SideBar from '../elements/SideBar';
-import Error from '../elements/Error';
-import ApiPaginator from '../elements/ApiPaginator';
-
+import NoteList from '../elements/NoteList';
 import NoteService from '../../services/NotesService';
+import ApiPaginator from '../elements/ApiPaginator';
+import { LocaleContext } from '../../contexts/LocaleContext';
+
+export const RangeContext = createContext();
 
 const UserNotes = () => {
     let { id } = useParams();
+    const currentLocale = useContext(LocaleContext);
+    const [selectedCategories, setSelectedCategories] = useState();
     const [error, setError] = useState(false);
     const [notes, setNotes] = useState(false);
     const [loading, setLoading] = useState(true);
     const [header] = useState("User's notes");
-    const [filter, setFilter] = useReducer(
-        (prev, data) => {
-            return {
-                ...prev,
-                ...data,
-            };
-        },
-        {
-            per_page: 5,
-            shared: 0,
-        },
-    );
+    const [filter, setFilter] = useState({
+        per_page: 5,
+        shared: 0,
+    });
 
     useEffect(() => {
-        NoteService.list(id, filter).then(
+        NoteService.list(id, filter, {locale: currentLocale.get()}).then(
             (res) => {
                 setLoading(false);
                 setNotes(res.data);
@@ -40,30 +32,55 @@ const UserNotes = () => {
                 setError(res.data.message);
             },
         );
-    }, [id, filter]);
+    }, [id, filter, currentLocale]);
+
+    const rangeAction = (range) => {
+        console.log('test');
+        setFilter((prev) => ({ ...prev, ...range }));
+    };
+
+    const rangeCategories = (target) => {
+        if (target.checked) {
+            setSelectedCategories((prev) => {
+                return { ...{ [target.value]: target.value }, ...prev };
+            });
+        } else {
+            setSelectedCategories((prev) => {
+                let newState = {...prev};
+                delete newState[target.value]
+                return newState;
+            });
+        }
+
+    };
+
+    useEffect(() => {
+        if(selectedCategories) {
+            console.log(selectedCategories);
+            setFilter((prev) => ({...prev, ...{'category': Object.keys(selectedCategories).join(',')}}));
+        }
+        
+    },[selectedCategories]);
 
     return (
         <>
-            <Header />
-            <main role="main" className="container">
-                <div className="row">
-                    {error && <Error message={error || undefined} />}
-                    {loading && <Spiner />}
-                    {notes && (
-                        <NotesList header={header} notes={notes}>
-                            <ApiPaginator
-                                meta={notes.meta}
-                                filters={filter}
-                                countButtons={5}
-                                onPageChange={(e) => setFilter(e.query)}
-                                doRangeOwn={(e) => setFilter({ shared: e.target.value })}
-                                doRangePerPage={(e) => setFilter({ per_page: e.target.value })}
-                            />
-                        </NotesList>
-                    )}
-                    <SideBar />
-                </div>
-            </main>
+            <NoteList
+                sharedFilter
+                notes={notes}
+                rangeAction={rangeAction}
+                rangeCategories={rangeCategories}
+                title={header}
+                error={error}
+                loading={loading}>
+                <ApiPaginator
+                    meta={notes.meta}
+                    filters={filter}
+                    countButtons={5}
+                    onPageChange={(e) => setFilter(e.query)}
+                    doRangeOwn={false}
+                    doRangePerPage={(e) => setFilter({ per_page: e.target.value })}
+                />
+            </NoteList>
         </>
     );
 };
