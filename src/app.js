@@ -1,5 +1,5 @@
 //Global plugins and services
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, Suspense } from 'react';
 // import { Router } from '@reach/router';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 
@@ -21,6 +21,7 @@ import ShareNote from './components/pages/ShareNote';
 import SignOut from './components/pages/SignOut';
 import Delete from './components/pages/Delete';
 import Create from './components/pages/Create';
+import Cabinet from './components/pages/Cabinet';
 
 const Dom = () => {
     // restore current user
@@ -56,7 +57,9 @@ const Dom = () => {
                 <Route path="/notes/:uid">
                     <Note />
                 </Route>
-
+                <Route path="/cabinet">
+                    <Cabinet />
+                </Route>
                 <Route path="/sign-up">
                     <SignUp />
                 </Route>
@@ -82,11 +85,13 @@ const Dom = () => {
 
 const App = () => {
     return (
-        <AuthProvider>
-            <LocaleProvider>
-                <Dom />
-            </LocaleProvider>            
-        </AuthProvider>
+        <Suspense fallback="loading">
+            <AuthProvider>
+                <LocaleProvider>
+                    <Dom />
+                </LocaleProvider>
+            </AuthProvider>
+        </Suspense>
     );
 };
 

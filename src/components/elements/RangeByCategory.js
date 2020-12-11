@@ -1,19 +1,25 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import CategoriesService from '../../services/CategoriesService';
+import { LocaleContext } from '../../contexts/LocaleContext';
 
 import { FilterContext } from './NoteList';
 
 const RangeByCategory = ({ calback }) => {
+    const currentLocale = useContext(LocaleContext);
+    const { t } = useTranslation(['title', 'common']);
     const { rangeCategories } = useContext(FilterContext);
     const [categories, setCategories] = useState();
 
     useEffect(() => {
-        CategoriesService.list().then((res) => setCategories(res.data.data));
-    }, []);
+        CategoriesService.list(null, {}, { locale: currentLocale.get() }).then((res) =>
+            setCategories(res.data.data),
+        );
+    }, [currentLocale]);
 
     return (
         <div className="p-4 mb-3 bg-light rounded">
-            <h4 className="font-italic">Range by category</h4>
+            <h4 className="font-italic">{t('title:range_title')}</h4>
 
             <form className="d-flex flex-wrap category-range">
                 {(categories || []).map((category) => (

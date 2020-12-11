@@ -25,7 +25,7 @@ const LocaleProvider = ({ children }) => {
                 setCurrentLocale(localStorage.getItem('locale'));
             },
         };
-    }, [currentLocale]);
+    }, [currentLocale, locales]);
 
     return <LocaleContext.Provider value={localeAction}>{children}</LocaleContext.Provider>;
 };

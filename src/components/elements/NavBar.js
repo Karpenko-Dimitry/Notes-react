@@ -8,30 +8,28 @@ import { store } from '../../contexts/AuthContext';
 import AuthService from '../../services/AuthService';
 import { LOCALES } from '../../env';
 import { LocaleContext } from '../../contexts/LocaleContext';
+import { useTranslation } from 'react-i18next';
 
 const NavBar = ({ callback }) => {
+    const { t, i18n } = useTranslation('common');
     const history = useHistory();
-    const authContext = useContext(store);
-    const [auth] = useState(authContext.isSignedIn());
+    const { isSignedIn } = useContext(store);
     const [user, setUser] = useState(undefined);
-    const [error, setError] = useState(false);
-    const locales = LOCALES.split(',')
+    const locales = LOCALES.split(',');
     const currentLocale = useContext(LocaleContext);
 
     useEffect(() => {
-        if (authContext.isSignedIn() && !user) {
+        if (isSignedIn && !user) {
             AuthService.profile().then(
                 (res) => setUser(res.data.data),
                 (res) => {
                     if (res.status === 401) {
                         history.push('/sign-out');
                     }
-                    setError(res.data.message);
-                    console.log(error);
                 },
             );
         }
-    }, [history, authContext, user, error]);
+    }, [history, isSignedIn, user]);
 
     return (
         <div className="nav-scroller py-1 mb-2 nav-bar">
@@ -55,7 +53,7 @@ const NavBar = ({ callback }) => {
                     id="navbarsExample02">
                     <ul className="navbar-nav">
                         <div className="dropdown mr-3">
-                            <button
+                            <div
                                 className="btn btn-secondary dropdown-toggle"
                                 role="button"
                                 id="dropdownMenuLink"
@@ -63,10 +61,18 @@ const NavBar = ({ callback }) => {
                                 aria-haspopup="true"
                                 aria-expanded="false">
                                 {currentLocale.get()}
-                            </button>
+                            </div>
                             <div className="dropdown-menu" aria-labelledby="dropdownMenuLink">
                                 {(locales || []).map((locale) => (
-                                    <button key={locale} className="dropdown-item" onClick={() => currentLocale.set(locale)}>{locale}</button>
+                                    <button
+                                        key={locale}
+                                        className="dropdown-item"
+                                        onClick={() => {
+                                            currentLocale.set(locale);
+                                            i18n.changeLanguage(locale);
+                                        }}>
+                                        {t(`common:${locale}`)}
+                                    </button>
                                 ))}
                             </div>
                         </div>
@@ -78,26 +84,26 @@ const NavBar = ({ callback }) => {
                             </li>
                         )}
 
-                        {auth && (
+                        {isSignedIn && (
                             <li className="nav-item">
                                 <Link className="nav-link" to="/sign-out">
-                                    Log-out
+                                    {t('common:logout')}
                                 </Link>
                             </li>
                         )}
 
-                        {!auth && (
+                        {!isSignedIn && (
                             <li className="nav-item">
                                 <Link className="nav-link" to="/sign-up">
-                                    Sign-up
+                                    {t('common:signup')}
                                 </Link>
                             </li>
                         )}
 
-                        {!auth && (
+                        {!isSignedIn && (
                             <li className="nav-item">
                                 <Link className="nav-link" to="/sign-in">
-                                    Sign-in
+                                    {t('common:signin')}
                                 </Link>
                             </li>
                         )}

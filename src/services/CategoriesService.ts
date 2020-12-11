@@ -1,5 +1,6 @@
 // import { da } from 'date-fns/locale';
 import ApiRequestService from './ApiRequestService';
+import { FALLBACK_LOCALE } from '../env';
 
 class CategoriesService {
     /**
@@ -8,12 +9,12 @@ class CategoriesService {
      * @param email
      * @param password
      */
-    public static async list(user_id: number|null, data: object = {}) {
+    public static async list(user_id: number|null, data: object = {}, headers: object = {'locale': FALLBACK_LOCALE}) {
         if (!user_id) {
-            return ApiRequestService.get(`/categories`, data);
+            return ApiRequestService.get(`/categories`, data, headers);
         }
 
-        return ApiRequestService.get(`/users/${user_id}/notes`, data);
+        return ApiRequestService.get(`/users/${user_id}/notes`, data, headers);
     }
 
     /**

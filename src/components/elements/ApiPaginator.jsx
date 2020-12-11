@@ -57,15 +57,6 @@ function Paginator({ meta, filters, countButtons, onPageChange, doRangeOwn, doRa
                       meta.total
                     : 'No results'}
             </div> */}
-            <div className="col-md-2">
-                <label htmlFor="">Per page</label>
-                <select id="inputState" className="form-control" onChange={doRangePerPage}>
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="15">15</option>
-                    <option value="20">20</option>
-                </select>
-            </div>
             {doRangeOwn && (
                 <div className="col-md-2">
                     <select id="inputState" className="form-control range-shared" onChange={doRangeOwn}>

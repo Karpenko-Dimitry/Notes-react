@@ -42,8 +42,8 @@ class NoteService {
      *
      * @param data
      */
-    public static async read(uid: string) {
-        return ApiRequestService.get(`/notes/${uid}`);
+    public static async read(uid: string, data: object = {}, headers: object = {'locale': FALLBACK_LOCALE} ) {
+        return ApiRequestService.get(`/notes/${uid}`, data, headers);
     }
 
     /**

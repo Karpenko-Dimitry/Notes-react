@@ -1,5 +1,7 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useContext, useEffect, useReducer, useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { WithContext as ReactTags } from 'react-tag-input';
 
 import CategoriesService from '../../services/CategoriesService';
 import TagsService from '../../services/TagsService';
@@ -10,9 +12,24 @@ import Spiner from '../elements/Spiner';
 import NoteService from '../../services/NotesService';
 import FilesServices from '../../services/FilesServices';
 
+import { LocaleContext } from '../../contexts/LocaleContext';
+
+import '../css/tags.scss';
+
+const KeyCodes = {
+    comma: 188,
+    enter: 13,
+};
+
+const delimiters = [KeyCodes.comma, KeyCodes.enter];
+
 const Create = () => {
+    const [tags, setTags] = useState([]);
+    const [suggestions, setSuggestions] = useState([]);
+    const currentLocale = useContext(LocaleContext);
+    const { t } = useTranslation(['title']);
     const history = useHistory();
-    const [translations, settranslations] = useReducer((prev, _new) => {
+    const [translations, setTranslations] = useReducer((prev, _new) => {
         let result = {};
 
         for (let language in _new) {
@@ -36,33 +53,54 @@ const Create = () => {
 
     const [card, setCard] = useState('en');
     const [categories, setCategories] = useState([]);
-    const [tags, setTags] = useState(false);
     const [languages, setLanguages] = useState([]);
     const [errors, setErrors] = useState({});
     const [load, setLoad] = useState(true);
     const [_public, setPublic] = useState(true);
+
     const [upLoadedFiles, setUpLoadedFiles] = useReducer((prev, _new) => {
-        return { ...prev, ..._new };
+        let newState = { ...prev, ..._new };
+
+        for (let key in newState) {
+            if (!newState[key]) {
+                delete newState[key];
+            }
+        }
+
+        return newState;
     }, []);
 
     useEffect(() => {
-        CategoriesService.list().then(
+        CategoriesService.list(null, {}, { locale: currentLocale.get() }).then(
             (res) => setCategories(res.data.data),
             (res) => setErrors(res.data.message),
         );
         TagsService.list().then(
-            (res) => setTags(res.data.data),
+            (res) =>
+                setSuggestions(() => {
+                    let tags = res.data.data;
+                    tags.forEach((item, key, array) => {
+                        item.text = item.name;
+                        item.id = item.name;
+                    });
+                    return [...tags];
+                }),
             (res) => setErrors(res.data.message),
         );
         LanguagesService.list().then(
             (res) => {
                 setLanguages(res.data.data);
-                settranslations({ en: {}, ru: {} });
             },
             (res) => setErrors(res.data.errors),
         );
         setLoad(false);
-    }, []);
+    }, [currentLocale]);
+
+    useEffect(() => {
+        if (languages) {
+            languages.forEach((item) => setTranslations({ [item.type]: {} }));
+        }
+    }, [languages]);
 
     const doCreate = () => {
         setErrors({});
@@ -72,13 +110,12 @@ const Create = () => {
             translations,
             category: Object.keys(selectedCategories),
             files: Object.keys(upLoadedFiles),
+            tags: tags.map((item) => item.text),
         }).then(
             (res) => {
-                console.log(res);
                 history.push('/notes/' + res.data.data.uid);
             },
             (res) => {
-                console.log(res);
                 setErrors(res.data.errors);
             },
         );
@@ -107,13 +144,32 @@ const Create = () => {
         FilesServices.delete(id).then(
             (res) => {
                 setUpLoadedFiles({
-                    [id]: {},
+                    [id]: false,
                 });
             },
             (res) => {
                 setErrors(res.data.errors);
             },
         );
+    };
+
+    const handleDelete = (i) => {
+        setTags((prev) => prev.filter((tag, index) => index !== i));
+    };
+
+    const handleAddition = (tag) => {
+        setTags((prev) => [...prev, tag]);
+    };
+
+    const handleDrag = (tag, currPos, newPos) => {
+        const tagState = [...tags];
+        const newTags = tagState.slice();
+
+        newTags.splice(currPos, 1);
+        newTags.splice(newPos, 0, tag);
+
+        // re-render
+        setTags(newTags);
     };
 
     return (
@@ -136,7 +192,7 @@ const Create = () => {
                                                 onClick={() => {
                                                     setCard(item.type);
                                                 }}>
-                                                {item.type}
+                                                {t('common:' + item.type)}
                                             </div>
                                         </li>
                                     );
@@ -149,7 +205,7 @@ const Create = () => {
                                 e.preventDefault();
                                 doCreate();
                             }}>
-                            {languages &&
+                            {Object.keys(translations).length !== 0 &&
                                 (languages || []).map((language) => {
                                     return (
                                         <div
@@ -158,13 +214,14 @@ const Create = () => {
                                                 language.type === card ? '' : 'hidden'
                                             }`}
                                             id={`${language.type}_body`}>
-                                            <h2 key>Add new note</h2>
+                                            <h2 key>{t('title:add_note')}</h2>
                                             <div className="input-group mt-3">
                                                 <div className="input-group-prepend">
                                                     <span
                                                         className="input-group-text"
                                                         id="basic-addon1">
-                                                        Title ({language.type})
+                                                        {t('common:title')} (
+                                                        {t('common:' + language.type)})
                                                     </span>
                                                 </div>
                                                 <input
@@ -173,7 +230,7 @@ const Create = () => {
                                                     name={`${language.type}_title`}
                                                     onChange={(e) => {
                                                         e.preventDefault();
-                                                        settranslations({
+                                                        setTranslations({
                                                             [language['type']]: {
                                                                 title: e.target.value,
                                                             },
@@ -212,7 +269,8 @@ const Create = () => {
                                             <div className="input-group mt-3">
                                                 <div className="input-group-prepend">
                                                     <span className="input-group-text">
-                                                        Text ({language.type})
+                                                        {t('common:text')} (
+                                                        {t('common:' + language.type)})
                                                     </span>
                                                 </div>
                                                 <textarea
@@ -220,7 +278,7 @@ const Create = () => {
                                                     rows="10"
                                                     onChange={(e) => {
                                                         e.preventDefault();
-                                                        settranslations({
+                                                        setTranslations({
                                                             [language['type']]: {
                                                                 content: e.target.value,
                                                             },
@@ -257,7 +315,7 @@ const Create = () => {
                                 })}
 
                             <div className="d-flex flex-wrap mt-3">
-                                <p className="font-italic mr-3 mb-0">Choose category</p>
+                                <p className="font-italic mr-3 mb-0">{t('common:choose_cat')}</p>
                                 {categories.map((category) => {
                                     return (
                                         <div key={`${category.name}`} className="mr-3">
@@ -293,7 +351,7 @@ const Create = () => {
 
                             <div className="form-group mt-3 text-left">
                                 <label htmlFor="userFile" className="btn btn-secondary btn-sm">
-                                    Upload files
+                                    {t('common:upload')}
                                 </label>
                                 <input
                                     type="file"
@@ -329,19 +387,22 @@ const Create = () => {
                                     checked={_public}
                                 />
                                 <label className="form-check-label " htmlFor="exampleCheck1">
-                                    Make public
+                                    {t('common:m_public')}
                                 </label>
                             </div>
                             <div className="form-group form-check mt-3 text-left">
                                 <label htmlFor="hashtag" className="form-check-label">
-                                    Hash Tag
+                                    {t('common:tag')}
                                 </label>
                                 <div>
-                                    <select id="hashtag" name="tags">
-                                        {(tags || []).map((tag) => (
-                                            <option key={tag.id} value={tag.id}>{tag.name}</option>
-                                        ))}
-                                    </select>
+                                    <ReactTags
+                                        tags={tags}
+                                        suggestions={suggestions}
+                                        handleDelete={handleDelete}
+                                        handleAddition={handleAddition}
+                                        handleDrag={handleDrag}
+                                        delimiters={delimiters}
+                                    />
                                 </div>
                             </div>
 
@@ -349,7 +410,7 @@ const Create = () => {
                                 <input
                                     className="btn btn-secondary btn-lg"
                                     type="submit"
-                                    value="Add note"
+                                    value={t('common:add_note')}
                                 />
                             </div>
                         </form>

@@ -1,10 +1,10 @@
 import React from 'react';
 import { createContext, useReducer, useMemo } from 'react';
 
-const store = createContext();
+export const store = createContext();
 const { Provider } = store;
 
-const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }) => {
     const [state, dispatch] = useReducer(
         (prevState, action) => {
             switch (action.type) {
@@ -30,15 +30,11 @@ const AuthProvider = ({ children }) => {
                 default:
             }
         },
-        {
-            isLoading: true,
-            isSignedIn: false,
-            token: null,
-        },
+        { isLoading: true, isSignedIn: null, token: null },
     );
 
-    const authMemo = useMemo(() => {
-        return {
+    const authMemo = useMemo(
+        () => ({
             signIn: async (access_token) => {
                 localStorage.access_token = access_token;
                 dispatch({ type: 'SIGN_IN', token: access_token });
@@ -47,7 +43,7 @@ const AuthProvider = ({ children }) => {
                 localStorage.removeItem('access_token');
                 dispatch({ type: 'SIGN_OUT' });
             },
-            isSignedIn: () => localStorage.access_token,
+            isSignedIn: !!localStorage.access_token,
             getToken: () => state.token,
             restoreToken: () => {
                 dispatch({
@@ -55,10 +51,11 @@ const AuthProvider = ({ children }) => {
                     token: localStorage.access_token,
                 });
             },
-        };
-    }, [state.token]);
+        }),
+        [state.token],
+    );
 
     return <Provider value={authMemo}>{children}</Provider>;
 };
 
-export { store, AuthProvider };
+export default { store, AuthProvider };

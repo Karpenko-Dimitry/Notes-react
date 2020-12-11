@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 
 import { store } from '../../contexts/AuthContext';
 
@@ -7,13 +7,12 @@ import FormNoteCreate from './FormNoteCreate';
 import RangeByCategory from './RangeByCategory';
 
 const SideBar = () => {
-    const authContext = useContext(store);
-    const [auth] = useState(authContext.isSignedIn());
+    const { isSignedIn } = useContext(store);
 
     return (
         <aside className="col-lg-4 blog-sidebar">
-            {auth && <FormNoteCreate />}
-            {!auth && <FormUserLogin />}
+            {isSignedIn && <FormNoteCreate />}
+            {!isSignedIn && <FormUserLogin />}
             <RangeByCategory />
         </aside>
     );

@@ -34,7 +34,6 @@ const LoginCallBack = ({ location }) => {
         })
             .then((res) => res.json())
             .then((res) => {
-                console.log(res);
                 setParams([`access_token=${res.access_token}`]);
                 setAccessTok(res.access_token);
             })
@@ -43,8 +42,6 @@ const LoginCallBack = ({ location }) => {
 
     useEffect(() => {
         const qqParams = params.join('&');
-        console.log('access_token:   ' + accessToken);
-        console.log(qqParams);
 
         fetch('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' + accessToken, {
             method: 'GET',
@@ -52,7 +49,7 @@ const LoginCallBack = ({ location }) => {
                 Host: 'www.googleapis.com',
             },
             Authorization: `Bearer ${accessToken}`,
-        }).then((res) => console.log(res.json()));
+        }).then((res) => res.json());
     }, [accessToken]);
 
     return <p>{location.search}</p>;

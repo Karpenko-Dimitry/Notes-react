@@ -1,8 +1,10 @@
 import React, { useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { FilterContext } from './NoteList';
 
 const NotesRange = ({ callback, grid, sharedFilter }) => {
+    const { t } = useTranslation(['common']);
     const { rangeAction } = useContext(FilterContext);
 
     return (
@@ -26,7 +28,7 @@ const NotesRange = ({ callback, grid, sharedFilter }) => {
                     />
                 </div>
                 <div className="form-group w-30 ml-3">
-                    <label htmlFor="per-page-select">Per page</label>
+                    <label htmlFor="per-page-select">{t('common:per_page')}</label>
                     <select
                         name="per_page"
                         className="form-control per-page-select"

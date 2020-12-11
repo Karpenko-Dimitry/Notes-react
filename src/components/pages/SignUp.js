@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import UsersService from '../../services/UsersService';
 import { store } from '../../contexts/AuthContext';
@@ -8,6 +9,7 @@ import favicon from '../images/note.png';
 import Header from '../elements/Header';
 
 const SignUp = () => {
+    const { t } = useTranslation(['common', 'title']);
     const [_name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -34,19 +36,19 @@ const SignUp = () => {
             <Header />
             <div className="container d-flex justify-content-center">
                 <form
-                    className="form-signin"
+                    className="form-signin page"
                     onSubmit={(e) => {
                         e.preventDefault();
                         doSubmit();
                     }}>
                     <img className="mb-4" src={favicon} alt="" width="72" height="72" />
-                    <h1 className="h3 mb-3 font-weight-normal">Please sign up</h1>
+                    <h1 className="h3 mb-3 font-weight-normal">{t('title:signup_title')}</h1>
                     <input
                         type="text"
                         className="form-control"
                         id="inputName"
                         name="name"
-                        placeholder="name"
+                        placeholder={t('common:name')}
                         value={_name}
                         onChange={(e) => setName(e.target.value)}
                     />
@@ -62,7 +64,7 @@ const SignUp = () => {
                         className="form-control"
                         id="inputEmail"
                         name="email"
-                        placeholder="email"
+                        placeholder={t('common:email')}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
@@ -77,7 +79,7 @@ const SignUp = () => {
                         className="form-control mt-3"
                         id="inputPassword"
                         name="password"
-                        placeholder="password"
+                        placeholder={t('common:password')}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
@@ -92,16 +94,16 @@ const SignUp = () => {
                         className="form-control"
                         id="inputPassword4"
                         name="password_confirmation"
-                        placeholder="confirm"
+                        placeholder={t('common:pas_conf')}
                         value={passwordConf}
                         onChange={(e) => setPasswordConf(e.target.value)}
                     />
 
                     <button className="btn btn-md btn-secondary btn-block mt-3 mr-0" type="submit">
-                        Sign up
+                        {t('common:signup')}
                     </button>
                     <span className="href mt-3" onClick={() => (document.location = OAUTH_URL)}>
-                        via Google
+                        {t('common:via_google')}
                     </span>
                     <p className="mt-5 mb-3 text-muted">&copy; 2020-2021</p>
                 </form>

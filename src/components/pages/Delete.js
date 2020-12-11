@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useHistory } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import AuthService from '../../services/AuthService';
 import NotesService from '../../services/NotesService';
 
 import Header from '../elements/Header';
-import SideBar from '../elements/SideBar';
 import Spiner from '../elements/Spiner';
 
 const Delete = () => {
+    const { t } = useTranslation(['common', 'title']);
     const { uid } = useParams();
     const history = useHistory();
     const [note, setNote] = useState(false);
@@ -39,9 +40,9 @@ const Delete = () => {
                 <div className="row">
                     {!note && <Spiner />}
                     {note && (
-                        <div className="col-md-8 blog-main">
-                            <h3>
-                                Do you realy want to delete note <br /> "{note.title}"
+                        <div className="col-md-12 blog-main">
+                            <h3 className="text-center">
+                                {t('title:delete_note', { note: note.title })}
                             </h3>
                             <form
                                 onClick={(e) => {
@@ -50,18 +51,17 @@ const Delete = () => {
                                 }}>
                                 <div className="d-flex justify-content-center mt-3">
                                     <button type="submit" className="btn btn-secondary btn-md mr-3">
-                                        Yes
+                                        {t('common:yes')}
                                     </button>
                                     <Link
                                         to={`/notes/${uid}`}
                                         className="btn btn-secondary btn-md ">
-                                        No
+                                        {t('common:no')}
                                     </Link>
                                 </div>
                             </form>
                         </div>
                     )}
-                    <SideBar />
                 </div>
             </main>
         </>

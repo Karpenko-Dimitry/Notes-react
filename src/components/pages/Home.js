@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { LocaleContext } from '../../contexts/LocaleContext';
+import { useTranslation } from 'react-i18next';
 
 import NoteService from '../../services/NotesService';
 
@@ -10,25 +11,27 @@ import NoteList from '../elements/NoteList';
 export const SearchContext = createContext();
 
 const Home = () => {
+    const { t } = useTranslation('title');
     const currentLocale = useContext(LocaleContext);
     const location = useLocation();
     const [notes, setNotes] = useState([]);
     const [selectedCategories, setSelectedCategories] = useState();
     const [load, setLoad] = useState(true);
     const [error, setError] = useState(false);
-    const [header, setHeader] = useState('Public notes are available.');
+    const [header, setHeader] = useState(t('title:notes_list_title'));
     const [filter, setFilter] = useState({
         per_page: 5,
         shared: 0,
-        query: location.search ? location.search.match(/query=([^&]+)/)[1] : '',
+        tag: location.search.match(/tag=([^&]+)/) ? location.search.match(/tag=([^&]+)/)[1] : '',
+        query: location.search.match(/query=([^&]+)/)
+            ? location.search.match(/query=([^&]+)/)[1]
+            : '',
     });
 
     useEffect(() => {
-
-        NoteService.list(null, filter, {locale: currentLocale.get()}).then(
+        NoteService.list(null, filter, { locale: currentLocale.get() }).then(
             (res) => {
                 setNotes(res.data);
-                console.log(res);
             },
             (res) => setError(res.data.message),
         );
@@ -43,16 +46,18 @@ const Home = () => {
             };
         });
 
-        setHeader('Search result');
+        setHeader(t('title:search_result'));
     };
 
     const rangeAction = (range) => {
-        if(range.category) {
-            setHeader('Public notes by category ' + range.name);
+        if (range.category) {
+            setHeader(t('title:notes_by_category', { category: range.name }));
+        }
+        if (range.tag) {
+            setHeader(t('title:notes_by_tag', { tag: range.tag }));
         }
         setFilter((prev) => ({ ...prev, ...range }));
     };
-    
 
     const rangeCategories = (target) => {
         if (target.checked) {
@@ -61,23 +66,21 @@ const Home = () => {
             });
         } else {
             setSelectedCategories((prev) => {
-                let newState = {...prev};
-                delete newState[target.value]
+                let newState = { ...prev };
+                delete newState[target.value];
                 return newState;
             });
         }
-
     };
 
     useEffect(() => {
-        if(selectedCategories) {
-            console.log(selectedCategories);
-            setFilter((prev) => ({...prev, ...{'category': Object.keys(selectedCategories).join(',')}}));
+        if (selectedCategories) {
+            setFilter((prev) => ({
+                ...prev,
+                ...{ category: Object.keys(selectedCategories).join(',') },
+            }));
         }
-        
-    },[selectedCategories]);
-
-    console.log(filter);
+    }, [selectedCategories]);
 
     return (
         <NoteList

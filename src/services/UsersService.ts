@@ -21,6 +21,18 @@ class UsersService {
     }
 
     /**
+     *
+     * Store user avatar
+     *
+     * @param data
+     */
+    public static async storeAvatar(userId: number, data: any) {
+        return ApiRequestService.post(`/user/${userId}/avatar`, data, {
+            'Content-Type': undefined,
+        });
+    }
+
+    /**
      * Fetch notification by id
      *
      * @param data

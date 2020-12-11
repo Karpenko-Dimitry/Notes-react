@@ -20,9 +20,11 @@ class ApiRequestService {
             Accept: 'application/json',
             'Accept-Language': 'nl',
             'Content-Type': 'application/json',
-            ...(localStorage.access_token ? {
-                Authorization: 'Bearer ' + localStorage.access_token,
-            } : {})
+            ...(localStorage.access_token
+                ? {
+                      Authorization: 'Bearer ' + localStorage.access_token,
+                  }
+                : {}),
         };
 
         return headers;
@@ -121,9 +123,12 @@ class ApiRequestService {
                     }
                 });
             } else {
-                params = {...params, ...{
-                    body: !(data instanceof FormData) ? JSON.stringify(data) : data
-                }};
+                params = {
+                    ...params,
+                    ...{
+                        body: !(data instanceof FormData) ? JSON.stringify(data) : data,
+                    },
+                };
             }
 
             params = cfg(params);

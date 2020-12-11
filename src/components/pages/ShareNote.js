@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useParams, Link, useHistory } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import NotesService from '../../services/NotesService';
 import AuthService from '../../services/AuthService';
@@ -7,7 +8,11 @@ import AuthService from '../../services/AuthService';
 import Header from '../elements/Header';
 import Spiner from '../elements/Spiner';
 
+import { LocaleContext } from '../../contexts/LocaleContext';
+
 const ShareNote = () => {
+    const currentLocale = useContext(LocaleContext);
+    const { t } = useTranslation(['common', 'title']);
     const { uid } = useParams();
     const history = useHistory();
     const [error, setError] = useState(false);
@@ -19,7 +24,7 @@ const ShareNote = () => {
 
     useEffect(() => {
         if (authUserId) {
-            NotesService.read(uid).then(
+            NotesService.read(uid, {}, { locale: currentLocale.get() }).then(
                 (res) => {
                     const data = res.data.data;
                     if (authUserId !== data.user_id) {
@@ -31,7 +36,7 @@ const ShareNote = () => {
             );
         }
         setLoad(false);
-    }, [uid, authUserId, history]);
+    }, [uid, authUserId, history, currentLocale]);
 
     useEffect(() => {
         AuthService.profile().then((res) => {
@@ -61,7 +66,7 @@ const ShareNote = () => {
                 <div className="container">
                     <div className="col-md-8 blog-main">
                         <h3 className="pb-4 mb-4 font-italic border-bottom">
-                            Share note "{note.title}" by e-mail
+                            {t('title:share_note', { note: note.title })}
                         </h3>
                     </div>
                     <form
@@ -77,7 +82,7 @@ const ShareNote = () => {
                                     id="inputEmail4"
                                     name="email"
                                     value={email}
-                                    placeholder="Email"
+                                    placeholder={t('common:email')}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                                 {(error.email || []).map((error) => (
@@ -87,16 +92,16 @@ const ShareNote = () => {
                                 ))}
                                 {message && (
                                     <div key={error} className="text-success">
-                                        You have sent your note successfully
+                                        {t('common:share_message')}
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         <button type="submit" className="btn btn-primary">
-                            Send
+                            {t('common:send')}
                         </button>
-                        <Link href={`/users/${authUserId}/notes`}>Back</Link>
+                        <Link href={`/users/${authUserId}/notes`}>{t('common:back')}</Link>
                     </form>
                 </div>
             )}

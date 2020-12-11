@@ -1,4 +1,4 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 
 import Header from './Header';
 import SideBar from './SideBar';
@@ -8,6 +8,7 @@ import NoteItem from './NoteItem';
 import NotesRange from './NotesRange';
 import Spiner from './Spiner';
 import '../css/pagination.scss';
+import AuthService from '../../services/AuthService';
 
 export const FilterContext = createContext();
 
@@ -26,10 +27,13 @@ const NoteList = ({
     const changeGrid = (e) => {
         setListGrid(e);
     };
+    const [userId, setUserId] = useState();
 
-    const notesElement = (notes.data || []).map((item) => {
-        return <NoteItem key={item.uid} note={item} grid={listGrid} />;
-    });
+    useEffect(() => {
+        AuthService.profile().then((res) => {
+            setUserId(res.data.data.id);
+        });
+    }, []);
 
     return (
         <>
@@ -53,12 +57,21 @@ const NoteList = ({
                                     </div>
                                 </div>
                                 {notes.data.length < 1 ? (
-                                    ''
+                                    <Nonotes />
                                 ) : (
                                     <>
                                         <div className="container">
                                             <div className="row">
-                                                {notesElement}
+                                                {(notes.data || []).map((item) => {
+                                                    return (
+                                                        <NoteItem
+                                                            key={item.uid}
+                                                            note={item}
+                                                            grid={listGrid}
+                                                            userId={userId}
+                                                        />
+                                                    );
+                                                })}
                                                 {children}
                                             </div>
                                         </div>
@@ -66,7 +79,6 @@ const NoteList = ({
                                 )}
                             </div>
                         )}
-                        {notes.length === 0 && <Nonotes />}
                         <SideBar />
                     </div>
                 </main>

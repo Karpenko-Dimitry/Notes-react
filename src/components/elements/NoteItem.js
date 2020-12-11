@@ -1,66 +1,66 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
-import AuthService from '../../services/AuthService';
 
 //Services and styles
-import '../css/note-item.css';
 import { FilterContext } from './NoteList';
+import { useTranslation } from 'react-i18next';
 
-const NoteItem = ({ note, grid }) => {
+const NoteItem = ({ note, grid, userId }) => {
+    const { t } = useTranslation('common');
     const { rangeAction } = useContext(FilterContext);
-    const [_public, setPublic] = useState(false);
-    const [ability, setAbility] = useState(false);
-
-    useEffect(() => {
-        AuthService.profile().then((res) => {
-            if (note && note.user.id === res.data.data.id) {
-                setAbility(true);
-            }
-        });
-    }, [note]);
-
-    useEffect(() => {
-        if (note.public) {
-            setPublic(true);
-        }
-    }, [note]);
 
     return (
         <div className={`col-md-${grid ? '12' : '6'}`}>
             <h2>
                 {note.title}
-                {_public || <sup className="private-label">(private)</sup>}
+                {note.public === 0 && (
+                    <sup className="private-label">({t('common:private_label')})</sup>
+                )}
             </h2>
             <p className="blog-post-meta">
-                Created at {note.created_at_locale} <br /> by {note.user.name}
-                {ability && (
+                {t('common:created_at')} {note.created_at_locale} <br /> {t('common:by')}{' '}
+                {note.user.name}
+                {note.user.id === userId && (
                     <>
                         <Link to={`/notes/${note.uid}/share`}>
-                            <span> Share,</span>
+                            <span> {t('common:share')},</span>
                         </Link>
                         <Link to={`/notes/${note.uid}/edit`}>
-                            <span> Edit, </span>
+                            <span> {t('common:edit')}, </span>
                         </Link>
                         <Link to={`/notes/${note.uid}/delete`}>
-                            <span> Delete, </span>
+                            <span> {t('common:delete')}, </span>
                         </Link>
                     </>
                 )}
             </p>
             <p>
-                Cat.:
+                {t('common:category_short')}
                 {(note.categories || []).map((category) => (
-                    
-                    <span key={category.id} className="href" onClick={() => rangeAction({'category': category.id, name: category.name})}>{category.name}</span>
-                        
-                  
+                    <span
+                        key={category.id}
+                        className="href"
+                        onClick={() => rangeAction({ category: category.id, name: category.name })}>
+                        {category.name}
+                    </span>
                 ))}
             </p>
 
             <p>{`${note.content.substr(0, 200)}...`}</p>
             <p>
+                {(note.tags || []).map((tag) => (
+                    <span
+                        key={tag.id}
+                        className="href"
+                        onClick={() => rangeAction({ tag: tag.name })}>
+                        #{tag.name + '  '}
+                    </span>
+                ))}
+            </p>
+
+            <p>
                 <Link className="btn btn-secondary btn-sm" to={`/notes/${note.uid}`} role="button">
-                    View details &raquo;
+                    {t('common:details')} &raquo;
                 </Link>
             </p>
             <hr />
